@@ -10,6 +10,11 @@ services:
             options:
                 max-size: 10m
                 max-file: "3"
+        volumes:
+            - ./setup/raw-input_data:/data
+            - ./temp:/temp
+        ports:
+            - "5432:5432"
 
     webserver:
         image: puckel/docker-airflow:1.10.9
@@ -26,6 +31,9 @@ services:
         volumes:
             - ./dags:/usr/local/airflow/dags
             # - ./plugins:/usr/local/airflow/plugins
+            - ./requirements.txt:/requirements.txt
+            - ./temp:/temp
+            - ./setup/raw-input_data:/data
         ports:
             - "8080:8080"
         command: webserver
