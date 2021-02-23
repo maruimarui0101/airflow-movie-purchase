@@ -10,4 +10,4 @@ CREATE TABLE retail.user_purchase (
 );
 
 COPY retail.user_purchase(playerid, reg_date, region, curr_level, league, special_event) 
-FROM '/data/retail/OnlineRetail.csv' DELIMITER ','  CSV HEADER;
+FROM '/data/retail/players.csv' DELIMITER ','  CSV HEADER;

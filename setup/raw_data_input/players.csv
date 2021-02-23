@@ -1,0 +1,5 @@
+playerid, reg_date, region, curr_level, league, special_event
+REMILIA, 2019-03-12, Korea, 999, GrandMaster, true
+Espresso, 2019-04-01, Korea, 999, Master, true
+ino, 2020-03-01, Japan, 567, Master, true
+bogus, 2021-01-01, Europe, 117, Diamond, false 
