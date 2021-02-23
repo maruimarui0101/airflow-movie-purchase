@@ -7,6 +7,12 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook # for uploading local files to GCS
 from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
+from airflow.contrib.operators.dataproc_operator import (
+    DataprocClusterCreateOperator
+    , DataProcPySparkOperator
+    , DataprocClusterDeleteOperator
+    )
+
 import os, logging
 
 default_args = {
