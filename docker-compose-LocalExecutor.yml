@@ -1,7 +1,9 @@
 version: '3.7'
 services:
     postgres:
-        image: postgres:9.6
+        build: 
+            context: ./
+            dockerfile: ./img/pgres/Dockerfile
         environment:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
@@ -11,13 +13,15 @@ services:
                 max-size: 10m
                 max-file: "3"
         volumes:
-            - ./setup/raw-input_data:/data
+            - ./setup/raw_data_input:/data
             - ./temp:/temp
         ports:
             - "5432:5432"
 
     webserver:
-        build: .
+        build: 
+            context: ./
+            dockerfile: ./img/airflow/Dockerfile 
         restart: always
         depends_on:
             - postgres
