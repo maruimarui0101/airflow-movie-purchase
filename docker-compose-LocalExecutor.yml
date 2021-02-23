@@ -34,7 +34,8 @@ services:
             - ${PWD}/requirements.txt:/requirements.txt
             - ./temp:/temp
             - ./setup/raw-input_data:/data
-            - $(pwd)/variables.json:/variables.json
+            - ${PWD}/variables.json:/variables.json
+            - ./secrets:/secrets
         ports:
             - "8080:8080"
         command: webserver
