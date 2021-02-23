@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.postgres_operator import PostgresOperator
-from airflow.contrib.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook # for uploading local files to GCS
 
 import os, logging

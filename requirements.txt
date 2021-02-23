@@ -1,0 +1,2 @@
+google-api-python-client
+apache-airflow[gcp,statsd,sentry]==1.10.10

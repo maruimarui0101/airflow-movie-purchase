@@ -17,7 +17,7 @@ services:
             - "5432:5432"
 
     webserver:
-        image: puckel/docker-airflow:1.10.9
+        build: .
         restart: always
         depends_on:
             - postgres
@@ -31,9 +31,10 @@ services:
         volumes:
             - ./dags:/usr/local/airflow/dags
             # - ./plugins:/usr/local/airflow/plugins
-            - ./requirements.txt:/requirements.txt
+            - ${PWD}/requirements.txt:/requirements.txt
             - ./temp:/temp
             - ./setup/raw-input_data:/data
+            - $(pwd)/variables.json:/variables.json
         ports:
             - "8080:8080"
         command: webserver
