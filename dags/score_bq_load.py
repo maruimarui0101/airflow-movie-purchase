@@ -83,16 +83,16 @@ with DAG('bigquery_data_load'
     WHERE rank = 1;
     """
 
-    # create_table = BigQueryOperator(
-    #     task_id='create_table',
-    #     sql=query,
-    #     destination_dataset_table="{{ project }}.dj_max.latest",
-    #     create_disposition='CREATE_IF_NEEDED',
-    #     write_disposition='WRITE_TRUNCATE',
-    #     use_legacy_sql=False,
-    #     location='us-east1',
-    #     bigquery_conn_id='google_cloud_default'
-    # )
+    create_table = BigQueryOperator(
+        task_id='create_table',
+        sql=query,
+        destination_dataset_table="{{ project }}.dj_max.latest{{ ts_nodash }}",
+        create_disposition='CREATE_IF_NEEDED',
+        write_disposition='WRITE_TRUNCATE',
+        use_legacy_sql=False,
+        location='us-east1',
+        bigquery_conn_id='google_cloud_default'
+    )
 
     # # Finally moving files to a backup bucket after successfully loading them to BigQuery
 
