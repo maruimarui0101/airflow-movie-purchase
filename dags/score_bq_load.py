@@ -7,12 +7,15 @@ from airflow.contrib.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOper
 from airflow.contrib.operators.bigquery_operator import BigQueryOperator
 
 PROJECT_ID = Variable.get("project")
-LANDING_BUCKET = Variable.get("landing_bucket")
-BACKUP_BUCKET = Variable.get("destination_bucket")
+LANDING_BUCKET = 'dj-max-event-score-landing'
+BACKUP_BUCKET = 'dj-max-event-score-backup'
 
 default_args = {'owner': 'Casey', 'start_date': days_ago(1)}
 
 def list_objects(bucket=None):
+    """
+    Taking in a bucket, objects within are returned as a list
+    """
     hook = GoogleCloudStorageHook()
     storage_objects = hook.list(bucket)
 
@@ -23,6 +26,9 @@ def move_objects(
     destination_bucket=None,
     prefix=None,
     **kwargs):
+    """
+    Copy objects from one bucket to another and then delete objects from source 
+    """
 
     storage_objects = kwargs['ti'].xcom_pull(task_ids='list_files')
 
@@ -76,9 +82,9 @@ with DAG('bigquery_data_load'
         SELECT
             *, 
             ROW_NUMBER() OVER (
-                PARTITION BY playerid, song ORDER BY DATETIME(date, TIME(hour, minute, 0)) DESC
+                PARTITION BY playerid, song ORDER BY score
             ) as rank
-        FROM `{{ project }}.djmax_event.submissions`
+        FROM `djmax_event.submissions`
     ) as latest
     WHERE rank = 1;
     """
@@ -86,7 +92,7 @@ with DAG('bigquery_data_load'
     create_table = BigQueryOperator(
         task_id='create_table',
         sql=query,
-        destination_dataset_table="{{ project }}.dj_max.latest{{ ts_nodash }}",
+        destination_dataset_table="{{ project }}.djmax_event.event_top",
         create_disposition='CREATE_IF_NEEDED',
         write_disposition='WRITE_TRUNCATE',
         use_legacy_sql=False,
@@ -96,15 +102,15 @@ with DAG('bigquery_data_load'
 
     # # Finally moving files to a backup bucket after successfully loading them to BigQuery
 
-    # move_files = PythonOperator(
-    #     task_id='move_files',
-    #     python_callable=move_objects,
-    #     op_kwargs={
-    #         'source_bucket': LANDING_BUCKET
-    #         , 'destination_bucket': BACKUP_BUCKET
-    #         , 'prefix': "{{ts_nodash}}"
-    #         },
-    #     provide_context=True
-    # )
+    move_files = PythonOperator(
+        task_id='move_files',
+        python_callable=move_objects,
+        op_kwargs={
+            'source_bucket': LANDING_BUCKET
+            , 'destination_bucket': BACKUP_BUCKET
+            , 'prefix': "{{ts_nodash}}"
+            },
+        provide_context=True
+    )
 
-    list_files >> load_data
+    list_files >> load_data >> create_table >> move_files
