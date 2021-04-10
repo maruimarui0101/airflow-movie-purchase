@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.models import Variable
+from airflow.utils.dates import days_ago
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.python_operator import PythonOperator
@@ -19,7 +21,7 @@ default_args = {
     "owner": "airflow",
     "depends_on_past": True,
     'wait_for_downstream': True,
-    "start_date": datetime(2021, 2, 22), # we start at this date to be consistent with the dataset we have and airflow will catchup
+    'start_date': days_ago(1), # we start at this date to be consistent with the dataset we have and airflow will catchup
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -29,8 +31,9 @@ default_args = {
 }
 
 # put vars here 
-SOURCE_BUCKET = 'dj-max-event' 
-DESTINATION_BUCKET = 'dj-max-event-landing' 
+PROJECT_ID = Variable.get("project")
+SOURCE_BUCKET = 'dj-max-event-temp' 
+DESTINATION_BUCKET = 'dj-max-event-temp' 
 GOOGLE_CONN_ID = 'google-cloud-default' # flexibility of conection id if needed
 
 unload_user_purchase ='./scripts/sql/filter_event_players.sql'
@@ -68,7 +71,7 @@ def remove_local_file(filelocation):
 
 
 with DAG("user_behaviour", default_args=default_args,
-          schedule_interval="0 0 * * *", max_active_runs=1) as dag:
+          schedule_interval="@daily", max_active_runs=1) as dag:
 
     # query data from pgres and unload it into file
 
@@ -87,7 +90,7 @@ with DAG("user_behaviour", default_args=default_args,
         task_id='move_files'
         , python_callable=local_to_gcs
         , op_kwargs={
-            'destination_bucket': 'dj-max-event' 
+            'destination_bucket': 'dj-max-event-temp' 
             , 'source_dir': '/temp'
             , 'source_object': filtered_players_file
             , 'prefix': "{{ts_nodash}}" 
@@ -136,7 +139,7 @@ with DAG("user_behaviour", default_args=default_args,
     delete_cluster = DataprocClusterDeleteOperator(
         task_id='delete_cluster'
         , project_id='cm-airflow-tutorial-demo'
-        , cluster_name='spark-cluster-{{ ds_noodash }}'
+        , cluster_name='spark-cluster-{{ ds_nodash }}'
         , trigger_rule='all_done'
     )
 
@@ -144,4 +147,4 @@ with DAG("user_behaviour", default_args=default_args,
 
     end_of_data_pipeline = DummyOperator(task_id='end_of_data_pipeline')
 
-pg_unload >> upload_file >> load_data >> remove_local_player_file >> end_of_data_pipeline
+pg_unload >> upload_file >> load_data >> create_cluster >> remove_local_player_file >> delete_cluster >> end_of_data_pipeline

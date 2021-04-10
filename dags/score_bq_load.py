@@ -10,7 +10,7 @@ PROJECT_ID = Variable.get("project")
 LANDING_BUCKET = 'dj-max-event-score-landing'
 BACKUP_BUCKET = 'dj-max-event-score-backup'
 
-default_args = {'owner': 'Casey', 'start_date': days_ago(1)}
+default_args = {'owner': 'airflow', 'start_date': days_ago(1)}
 
 def list_objects(bucket=None):
     """
@@ -46,7 +46,7 @@ def move_objects(
 
 
 with DAG('bigquery_data_load'
-, schedule_interval='@hourly'
+, schedule_interval='@daily'
 , catchup=False
 , default_args=default_args
 , max_active_runs=1
